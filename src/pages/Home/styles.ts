@@ -35,7 +35,7 @@ export const baseInput = styled.input`
   font-weight: bold;
   font-size: 1.125rem; //inherit - herda do elemento pai
   padding: 0 0.5rem;
-  color: solid ${(props) => props.theme['gray-100']};
+  color: ${(props) => props.theme['gray-100']};
 
   &:focus {
     box-shadow: none;
