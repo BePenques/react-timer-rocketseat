@@ -44,33 +44,47 @@ export function CyclesContextProvider({
   // setCycles passa a ser o metodo para disparar a acao,não mais o metodo de alteração - novo nome dispatch
   const [cyclesState, dispatch] = useReducer(
     (state: CyclesState, action: any) => {
-      if (action.type === 'ADD_NEW_CYCLE') {
-        return {
-          ...state,
-          cycles: [...state.cycles, action.payload.newCycle],
-          activeCycleId: action.payload.newCycle.id,
-        }
-      }
-
-      if (action.type === 'INTERRUPT_CURRENT_CYCLE') {
-        return {
-          ...state,
-          cycles: state.cycles.map((cycle) => {
-            // if (cycle.id === state.activeCycleId) {
-            if (cycle.id === action.payload.activeCycleId) {
-              return {
-                ...cycle,
-                interruptDate: new Date(),
+      switch (action.type) {
+        case 'ADD_NEW_CYCLE':
+          return {
+            ...state,
+            cycles: [...state.cycles, action.payload.newCycle],
+            activeCycleId: action.payload.newCycle.id,
+          }
+        case 'INTERRUPT_CURRENT_CYCLE':
+          return {
+            ...state,
+            cycles: state.cycles.map((cycle) => {
+              // if (cycle.id === state.activeCycleId) {
+              if (cycle.id === action.payload.activeCycleId) {
+                return {
+                  ...cycle,
+                  interruptDate: new Date(),
+                }
+              } else {
+                return cycle
               }
-            } else {
-              return cycle
-            }
-          }),
-          activeCycleId: null,
-        }
+            }),
+            activeCycleId: null,
+          }
+        case 'MARK_CURRENT_CYCLE_AS_FINISHED':
+          return {
+            ...state,
+            cycles: state.cycles.map((cycle) => {
+              if (cycle.id === action.payload.activeCycleId) {
+                return {
+                  ...cycle,
+                  finishedDate: new Date(),
+                }
+              } else {
+                return cycle
+              }
+            }),
+            activeCycleId: null,
+          }
+        default:
+          return state
       }
-
-      return state
     },
     {
       cycles: [],
