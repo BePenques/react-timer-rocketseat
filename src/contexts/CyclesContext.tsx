@@ -1,11 +1,17 @@
-import { ReactNode, createContext, useReducer, useState } from 'react'
+import {
+  ReactNode,
+  createContext,
+  useEffect,
+  useReducer,
+  useState,
+} from 'react'
 import { Cycle, cyclesReducer } from '../reducers/cycles/reducer'
 import {
-  ActionTypes,
   addNewCycleAction,
   interruptCycleAction,
   markCurrentCycleAsFinishedAction,
 } from './actions'
+import { differenceInSeconds } from 'date-fns'
 
 interface CreateCycleData {
   task: string
@@ -35,16 +41,43 @@ export function CyclesContextProvider({
   // 1º param -> valor atual de cycles + ação que o usuario esta querendo realizar
   // 2º -> estado inicial -> []
   // setCycles passa a ser o metodo para disparar a acao,não mais o metodo de alteração - novo nome dispatch
-  const [cyclesState, dispatch] = useReducer(cyclesReducer, {
-    cycles: [],
-    activeCycleId: null,
-  })
+  const [cyclesState, dispatch] = useReducer(
+    cyclesReducer,
+    {
+      cycles: [],
+      activeCycleId: null,
+    },
+    (initialState) => {
+      const storedStateAsJSON = localStorage.getItem(
+        '@ignite-timer:cycles-state-1.0.0',
+      )
+
+      if (storedStateAsJSON) {
+        return JSON.parse(storedStateAsJSON)
+      }
+
+      return initialState
+    },
+  )
+
+  useEffect(() => {
+    const stateJSON = JSON.stringify(cyclesState)
+
+    localStorage.setItem('@ignite-timer:cycles-state-1.0.0', stateJSON)
+    /* sempre coloque prefixo com nome da aplicação + nome informação + versão */
+  }, [cyclesState])
 
   const { cycles, activeCycleId } = cyclesState
-  // const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
-  const [amountSecondsPassed, setAmountSecondsPassed] = useState(0)
-
   const activeCycle = cycles.find((cycle) => cycle.id === activeCycleId)
+
+  // const [activeCycleId, setActiveCycleId] = useState<string | null>(null)
+  const [amountSecondsPassed, setAmountSecondsPassed] = useState(() => {
+    if (activeCycle) {
+      return differenceInSeconds(new Date(), new Date(activeCycle.startDate))
+    }
+
+    return 0
+  })
 
   function setSecondsPassed(seconds: number) {
     setAmountSecondsPassed(seconds)
@@ -87,7 +120,7 @@ export function CyclesContextProvider({
     //   }),
     // )
 
-    dispatch(interruptCycleAction(activeCycleId))
+    dispatch(interruptCycleAction())
 
     // setActiveCycleId(null)
     setAmountSecondsPassed(0)
